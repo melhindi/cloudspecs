@@ -25,9 +25,21 @@ If you find Cloudspecs or our analysis useful for your research, please consider
 ## Installation
 You can run also run Cloudspecs locally by cloning this repository.
 We use [npm](https://www.npmjs.com/) for package management and [vite](https://vite.dev/) for serving the website.<br>
+
+### Nix
+Enter a development shell:
+```bash
+nix develop
+```
+Run a local preview instance:
+```bash
+nix run
+```
+
+### npm
 Install required packages:
 ```bash
-npm i
+npm ci
 ```
 Start a development server:
 ```bash
