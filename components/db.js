@@ -1,7 +1,7 @@
 import * as duckdb from '@duckdb/duckdb-wasm';
 
-// Load static DuckDB database from GitHub
-import dbfile from '/static/cloudspecs.duckdb?url';
+// Load the bundled DuckDB file through Vite so the Pages base path is applied.
+import dbfile from '../static/cloudspecs.duckdb?url';
 const DB_NAME = "cloudspecs.duckdb";
 const CSV_UPLOAD_PREFIX = "uploads/";
 

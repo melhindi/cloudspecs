@@ -10,7 +10,7 @@ import ErrorMessage from './components/ErrorMessage.js';
 import ResizeHandle from './components/ResizeHandle.js';
 import { toggleFavicon } from './components/favicons.js';
 import SAMPLE_QUERIES from './static/sample-queries.json';
-import { copyToClipboard } from '/util.js'
+import { copyToClipboard } from './util.js'
 
 const app = {};
 const quoteIdentifier = (name) => `"${String(name).replaceAll('"', '""')}"`;
