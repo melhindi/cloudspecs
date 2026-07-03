@@ -1,6 +1,6 @@
 import './splitview.css'
 import './tableview.css'
-import { debounce } from '/util.js'
+import { debounce } from '../util.js'
 import { toggleFavicon } from './favicons.js'
 import state from './state.js'
 

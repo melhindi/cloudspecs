@@ -1,0 +1,509 @@
+[
+  {
+    "description": "Preview Rows",
+    "sql_code": [
+      "SELECT *",
+      "FROM storage_benchmarks",
+      "LIMIT 100"
+    ],
+    "r_code": "",
+    "group": "Schema"
+  },
+  {
+    "description": "Median Latency by Durability Mode",
+    "sql_code": [
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND benchmark_rw_mode = 'write'",
+        "AND io_engine = 'psync' AND block_size_bytes = 4096 AND iodepth = 1 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'local' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = median_latency_ms, x = durability_mode)) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_wrap(~ benchmark_machine_type) + ",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Instance-Local Storage"
+  },
+  {
+    "description": "Median Latency by Durability Mode",
+    "sql_code": [
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND benchmark_rw_mode = 'write'",
+        "AND io_engine = 'psync' AND block_size_bytes = 4096 AND iodepth = 1 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'block' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = median_latency_ms, x = durability_mode)) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_grid(benchmark_machine_type ~ block_volume_performance_class) +",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Remote Block Storage"
+  },
+  {
+    "description": "Median Latency by Filesystem",
+    "sql_code": [
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND benchmark_rw_mode = 'write'",
+        "AND io_engine = 'psync' AND block_size_bytes = 4096 AND iodepth = 1 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'local' AND durability_mode = 'fsync'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = median_latency_ms, x = storage_target_filesystem )) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_wrap(~ benchmark_machine_type) + ",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Instance-Local Storage"
+  },
+  {
+    "description": "Median Latency by Filesystem",
+    "sql_code": [
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND benchmark_rw_mode = 'write'",
+        "AND io_engine = 'psync' AND block_size_bytes = 4096 AND iodepth = 1 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'block' AND durability_mode = 'fsync'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = median_latency_ms, x = storage_target_filesystem )) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_grid(benchmark_machine_type ~ block_volume_performance_class) +",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Remote Block Storage"
+  },
+  {
+    "description": "Median Latency by Operation Type",
+    "sql_code": [
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND io_engine = 'psync' AND block_size_bytes = 4096 AND iodepth = 1 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'local' AND durability_mode = 'none' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = median_latency_ms, x = benchmark_rw_mode )) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_wrap(~ benchmark_machine_type) + ",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Instance-Local Storage"
+  },
+  {
+    "description": "Median Latency by Operation Type",
+    "sql_code": [
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND io_engine = 'psync' AND block_size_bytes = 4096 AND iodepth = 1 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'block' AND durability_mode = 'none' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = median_latency_ms, x = benchmark_rw_mode )) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_grid(benchmark_machine_type ~ block_volume_performance_class) +",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Remote Block Storage"
+  },
+
+
+  {
+    "description": "Throughput by Durability Mode",
+    "sql_code": [
+        "SELECT (read_bw_kib_per_sec + write_bw_kib_per_sec)/1000 as bw_mib_per_sec, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND benchmark_rw_mode = 'write'",
+        "AND io_engine = 'io_uring' AND iodepth = 32 AND block_size_bytes = 4096 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'local' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = bw_mib_per_sec, x = durability_mode)) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_wrap(~ benchmark_machine_type) + ",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Instance-Local Storage"
+  },
+  {
+    "description": "Throughput by Durability Mode",
+    "sql_code": [
+        "SELECT (read_bw_kib_per_sec + write_bw_kib_per_sec)/1000 as bw_mib_per_sec, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND benchmark_rw_mode = 'write'",
+        "AND io_engine = 'io_uring' AND iodepth = 32 AND block_size_bytes = 4096 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'block' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = bw_mib_per_sec, x = durability_mode)) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_grid(benchmark_machine_type ~ block_volume_performance_class) +",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Remote Block Storage"
+  },
+  {
+    "description": "Throughput by Filesystem",
+    "sql_code": [
+        "SELECT (read_bw_kib_per_sec + write_bw_kib_per_sec)/1000 as bw_mib_per_sec, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND benchmark_rw_mode = 'write'",
+        "AND io_engine = 'io_uring' AND iodepth = 32 AND block_size_bytes = 4096 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'local' AND durability_mode = 'fsync'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = bw_mib_per_sec, x = storage_target_filesystem )) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_wrap(~ benchmark_machine_type) + ",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Instance-Local Storage"
+  },
+  {
+    "description": "Throughput by Filesystem",
+    "sql_code": [
+        "SELECT (read_bw_kib_per_sec + write_bw_kib_per_sec)/1000 as bw_mib_per_sec, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND benchmark_rw_mode = 'write'",
+        "AND io_engine = 'io_uring' AND iodepth = 32 AND block_size_bytes = 4096 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'block' AND durability_mode = 'fsync'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = bw_mib_per_sec, x = storage_target_filesystem )) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_grid(benchmark_machine_type ~ block_volume_performance_class) +",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Remote Block Storage"
+  },
+  {
+    "description": "Throughput by Operation Type",
+    "sql_code": [
+        "SELECT (read_bw_kib_per_sec + write_bw_kib_per_sec)/1000 as bw_mib_per_sec, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND io_engine = 'io_uring' AND iodepth = 32 AND block_size_bytes = 4096 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'local' AND durability_mode = 'none' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = bw_mib_per_sec, x = benchmark_rw_mode )) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_wrap(~ benchmark_machine_type) + ",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Instance-Local Storage"
+  },
+  {
+    "description": "Throughput by Operation Type",
+    "sql_code": [
+        "SELECT (read_bw_kib_per_sec + write_bw_kib_per_sec)/1000 as bw_mib_per_sec, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND io_engine = 'io_uring' AND iodepth = 32 AND block_size_bytes = 4096 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'block' AND durability_mode = 'none' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = bw_mib_per_sec, x = benchmark_rw_mode )) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_grid(benchmark_machine_type ~ block_volume_performance_class) +",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Remote Block Storage"
+  },
+
+  {
+    "description": "IOPS by Durability Mode",
+    "sql_code": [
+        "SELECT (read_iops + write_iops) as iops, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND benchmark_rw_mode = 'write'",
+        "AND io_engine = 'io_uring' AND iodepth = 32 AND block_size_bytes = 4096 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'local' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = iops, x = durability_mode)) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_wrap(~ benchmark_machine_type) + ",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Instance-Local Storage"
+  },
+  {
+    "description": "IOPS by Durability Mode",
+    "sql_code": [
+        "SELECT (read_iops + write_iops) as iops, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND benchmark_rw_mode = 'write'",
+        "AND io_engine = 'io_uring' AND iodepth = 32 AND block_size_bytes = 4096 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'block' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = iops, x = durability_mode)) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_grid(benchmark_machine_type ~ block_volume_performance_class) +",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Remote Block Storage"
+  },
+  {
+    "description": "IOPS by Filesystem",
+    "sql_code": [
+        "SELECT (read_iops + write_iops) as iops, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND benchmark_rw_mode = 'write'",
+        "AND io_engine = 'io_uring' AND iodepth = 32 AND block_size_bytes = 4096 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'local' AND durability_mode = 'fsync'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = iops, x = storage_target_filesystem )) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_wrap(~ benchmark_machine_type) + ",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Instance-Local Storage"
+  },
+  {
+    "description": "IOPS by Filesystem",
+    "sql_code": [
+        "SELECT (read_iops + write_iops) as iops, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND benchmark_rw_mode = 'write'",
+        "AND io_engine = 'io_uring' AND iodepth = 32 AND block_size_bytes = 4096 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'block' AND durability_mode = 'fsync'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = iops, x = storage_target_filesystem )) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_grid(benchmark_machine_type ~ block_volume_performance_class) +",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Remote Block Storage"
+  },
+  {
+    "description": "IOPS by Operation Type",
+    "sql_code": [
+        "SELECT (read_iops + write_iops) as iops, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND io_engine = 'io_uring' AND iodepth = 32 AND block_size_bytes = 4096 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'local' AND durability_mode = 'none' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = iops, x = benchmark_rw_mode )) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_wrap(~ benchmark_machine_type) + ",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Instance-Local Storage"
+  },
+  {
+    "description": "IOPS by Operation Type",
+    "sql_code": [
+        "SELECT (read_iops + write_iops) as iops, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND io_engine = 'io_uring' AND iodepth = 32 AND block_size_bytes = 4096 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'block' AND durability_mode = 'none' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = iops, x = benchmark_rw_mode )) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_grid(benchmark_machine_type ~ block_volume_performance_class) +",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Remote Block Storage"
+  },
+
+  {
+    "description": "Median Instance Storage Latency by Provider",
+    "sql_code": [
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider <> ''",
+        "AND io_engine = 'psync' AND block_size_bytes = 4096 AND iodepth = 1 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'local' AND durability_mode = 'none' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = median_latency_ms, x = benchmark_rw_mode , fill=provider)) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_wrap(~ benchmark_machine_type) + ",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Provider Comparison"
+  },
+  {
+    "description": "Median Remote Block Storage Latency by Provider",
+    "sql_code": [
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider <> ''",
+        "AND benchmark_machine_type IN ('g2a.30d', 'c6id.32xlarge')",
+        "AND io_engine = 'psync' AND block_size_bytes = 4096 AND iodepth = 1 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'block' AND durability_mode = 'none' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = median_latency_ms, x = benchmark_rw_mode , fill=provider)) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_wrap(~ block_volume_performance_class) + ",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Provider Comparison"
+  }
+]

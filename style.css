@@ -44,6 +44,8 @@ html {
 header {
   display: flex;
   align-items: center;
+  gap: .35em;
+  flex-wrap: wrap;
   padding: .5em .5em .5em .5em;
   background-color: var(--grey-bg);
   border-bottom: 1px solid var(--grey-border)
@@ -210,6 +212,10 @@ header {
     text-decoration: none;
     outline: none;
     text-overflow: ellipsis;
+}
+
+.db-select {
+  min-width: 11rem;
 }
 
 #csv-upload {

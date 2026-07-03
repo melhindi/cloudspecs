@@ -1,6 +1,6 @@
 // main.js
 // Orchestrates components: state manager, code editors, database querying, and table rendering
-import './bootstrap.js'
+import './bootstrap.js';
 import 'jquery-ui/dist/jquery-ui.js';
 import state from './components/state.js';
 import CodeEditor from './components/CodeEditor.js';
@@ -8,15 +8,34 @@ import DB from './components/db.js';
 import ResultTable from './components/ResultTable.js';
 import ErrorMessage from './components/ErrorMessage.js';
 import ResizeHandle from './components/ResizeHandle.js';
+import {
+  DEFAULT_DATABASE_ID,
+  getDatabaseConfig,
+  isKnownDatabaseId,
+  listDatabaseConfigs,
+} from './components/databaseCatalog.js';
 import { toggleFavicon } from './components/favicons.js';
-import SAMPLE_QUERIES from './static/sample-queries.json';
-import { copyToClipboard } from './util.js'
+import { copyToClipboard, showToast } from './util.js';
 
-const app = {};
+const app = {
+  db: null,
+  dbLoadToken: 0,
+  sqlEditor: null,
+  resultTable: null,
+  sampleQueriesByValue: new Map(),
+  sampleQueriesSelect: null,
+  databaseSelect: null,
+  rEditor: null,
+  repl: null,
+};
+
 const quoteIdentifier = (name) => `"${String(name).replaceAll('"', '""')}"`;
-////////////////////////  SQL Editor  ///////////////////////
-// Run query based on current state.sqlQuery
+
 async function runQuery() {
+  if (!app.db) {
+    return;
+  }
+
   state.setState({ sqlError: 'loading', sqlWarning: '' });
   const query = state.getState().sqlQuery;
   let result;
@@ -25,12 +44,14 @@ async function runQuery() {
   } catch (err) {
     result = { error: err.toString() };
   }
+
   if (result.error) {
     state.setState({ result: { columns: [], rows: [], query }, sqlError: result.error, sqlWarning: '' });
-  } else {
-    let newState = { result: { columns: result.columns, rows: result.rows, query }, sqlError: '', sqlWarning: '' };
-    state.setState('warning' in result ? { ...newState, sqlWarning: result.warning } : newState);
+    return;
   }
+
+  const newState = { result: { columns: result.columns, rows: result.rows, query }, sqlError: '', sqlWarning: '' };
+  state.setState('warning' in result ? { ...newState, sqlWarning: result.warning } : newState);
 }
 
 function renderCsvStatus(newState) {
@@ -50,38 +71,229 @@ function renderImportedTables(newState) {
   elem.textContent = `Session tables: ${newState.importedTables.join(', ')}`;
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-  // SQL Code Editor
+function renderDatabaseSelect(activeDatabaseId) {
+  if (!app.databaseSelect) {
+    return;
+  }
+
+  if (!app.databaseSelect.options.length) {
+    app.databaseSelect.innerHTML = '';
+    for (const config of listDatabaseConfigs()) {
+      const option = document.createElement('option');
+      option.value = config.id;
+      option.textContent = config.label;
+      option.title = config.fileName;
+      app.databaseSelect.appendChild(option);
+    }
+  }
+
+  if (activeDatabaseId && app.databaseSelect.value !== activeDatabaseId) {
+    app.databaseSelect.value = activeDatabaseId;
+  }
+}
+
+function renderSampleQueries(samples = [], selectedSql = '') {
+  if (!app.sampleQueriesSelect) {
+    return;
+  }
+
+  app.sampleQueriesByValue = new Map();
+  const groups = new Map();
+  for (const sample of samples) {
+    const group = sample.group || 'Other';
+    if (!groups.has(group)) {
+      groups.set(group, []);
+    }
+    groups.get(group).push(sample);
+  }
+
+  app.sampleQueriesSelect.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.disabled = true;
+  placeholder.textContent = samples.length ? 'Select Example' : 'No Examples';
+  app.sampleQueriesSelect.appendChild(placeholder);
+
+  for (const [group, groupSamples] of groups.entries()) {
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = group;
+    for (const sample of groupSamples) {
+      const value = `${group}::${sample.description}`;
+      app.sampleQueriesByValue.set(value, sample);
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = sample.description;
+      optgroup.appendChild(option);
+    }
+    app.sampleQueriesSelect.appendChild(optgroup);
+  }
+
+  syncSampleQuerySelection(selectedSql);
+}
+
+function syncSampleQuerySelection(selectedSql = '') {
+  if (!app.sampleQueriesSelect) {
+    return;
+  }
+
+  for (const [value, sample] of app.sampleQueriesByValue.entries()) {
+    if (sample.sql_code === selectedSql) {
+      app.sampleQueriesSelect.value = value;
+      return;
+    }
+  }
+  app.sampleQueriesSelect.value = '';
+}
+
+function handleSampleQuerySelection(sample) {
+  const layoutType = sample.layout || (sample.r_code ? 'split' : 'table');
+  const updates = {
+    sqlQuery: sample.sql_code,
+    rCode: sample.r_code,
+    layout: { type: layoutType },
+    runningQuery: true,
+  };
+
+  if (!sample.r_code && app.repl) {
+    updates.rCode = app.repl.minimalRCode();
+    updates.layout = { type: 'table' };
+  }
+
+  state.setState(updates);
+  toggleFavicon(false);
+  runQuery();
+}
+
+async function loadDatabase(dbId, { resetSqlQuery = false } = {}) {
+  const requestedDbId = dbId || DEFAULT_DATABASE_ID;
+  const dbConfig = getDatabaseConfig(requestedDbId);
+  const invalidRequestedDb = !isKnownDatabaseId(requestedDbId);
+  const loadToken = ++app.dbLoadToken;
+  const shouldResetSqlQuery = resetSqlQuery || !state.hasUrlState();
+
+  if (invalidRequestedDb) {
+    showToast(`Database "${requestedDbId}" is not available. Loaded ${dbConfig.label} instead.`, 'error');
+  }
+
+  state.setState({
+    dbId: dbConfig.id,
+    sqlError: 'loading',
+    sqlWarning: '',
+    rError: 'loading',
+    rOutput: '',
+    csvStatusText: '',
+    csvStatusType: 'idle',
+    importedTables: [],
+  });
+
+  renderDatabaseSelect(dbConfig.id);
+  const rOutputElem = document.getElementById('r-output');
+  if (rOutputElem) {
+    rOutputElem.innerHTML = '';
+  }
+
+  if (app.db) {
+    const previousDb = app.db;
+    app.db = null;
+    await previousDb.close();
+  }
+
+  const nextDb = await DB.create({
+    dbUrl: dbConfig.dbUrl,
+    fileName: dbConfig.fileName,
+  });
+
+  if (loadToken !== app.dbLoadToken) {
+    await nextDb.close();
+    return;
+  }
+
+  app.db = nextDb;
+
+  let initialSqlQuery = state.getState().sqlQuery;
+  if (shouldResetSqlQuery) {
+    initialSqlQuery = dbConfig.defaultSqlQuery || await nextDb.getPreviewQuery();
+    state.setState({ sqlQuery: initialSqlQuery });
+  }
+
+  state.setState({
+    sqlError: 'loading',
+    sqlWarning: '',
+    rError: 'loading',
+    rOutput: '',
+    csvStatusText: '',
+    csvStatusType: 'idle',
+    importedTables: [],
+    result: { columns: [], rows: [], query: initialSqlQuery },
+  });
+
+  renderSampleQueries(dbConfig.sampleQueries, initialSqlQuery);
+  renderDatabaseSelect(dbConfig.id);
+  state.saveState();
+
+  await runQuery();
+}
+
+async function boot() {
   app.sqlEditor = new CodeEditor('#sql-editor', {
     mode: 'text/x-sql',
     stateKey: 'sqlQuery',
-    // handled in global ctrlenter listener below
-    // extraKeys: { 'Ctrl-Enter': runQuery }
   });
-  // error message for SQL
   app.sqlError = new ErrorMessage('#sql-status', ['sqlError', 'sqlWarning']);
-
-  // Initialize database and result table
-  app.db = await DB.create();
   app.resultTable = new ResultTable('#sql-output');
+  app.sampleQueriesSelect = document.getElementById('sample-queries');
+  app.databaseSelect = document.getElementById('database-select');
+
+  if (app.sampleQueriesSelect) {
+    app.sampleQueriesSelect.addEventListener('change', (event) => {
+      const sample = app.sampleQueriesByValue.get(event.target.value);
+      if (sample) {
+        handleSampleQuerySelection(sample);
+      }
+    });
+  }
+
+  if (app.databaseSelect) {
+    app.databaseSelect.addEventListener('change', async (event) => {
+      const selectedDbId = event.target.value;
+      if (selectedDbId === state.getState().dbId) {
+        return;
+      }
+      await loadDatabase(selectedDbId, { resetSqlQuery: true });
+    });
+  }
+
   state.subscribe((newState) => renderCsvStatus(newState), ['csvStatusText', 'csvStatusType']);
   state.subscribe((newState) => renderImportedTables(newState), ['importedTables']);
-  renderCsvStatus(state.getState());
-  renderImportedTables(state.getState());
-
-  // Handle state updates for query results
-  state.subscribe((newState, updates) => {
+  state.subscribe((newState) => {
+    if (!newState.result) {
+      return;
+    }
     const { columns, rows, query } = newState.result;
     app.resultTable.render(columns, rows, query);
   }, ['result', 'viewsize', 'layout']);
+  state.subscribe((newState) => {
+    syncSampleQuerySelection(newState.sqlQuery);
+  }, ['sqlQuery']);
+  state.subscribe((newState) => {
+    const dbConfig = getDatabaseConfig(newState.dbId);
+    renderDatabaseSelect(dbConfig.id);
+  }, ['dbId']);
 
-  // Load table button
+  renderCsvStatus(state.getState());
+  renderImportedTables(state.getState());
+  renderDatabaseSelect(state.getState().dbId);
+
   document.getElementById('load-table').addEventListener('click', async (e) => {
     e.preventDefault();
     await runQuery();
   });
 
   document.getElementById('csv-upload').addEventListener('change', async (event) => {
+    if (!app.db) {
+      return;
+    }
+
     const [file] = event.target.files || [];
     event.target.value = '';
     if (!file) {
@@ -108,140 +320,86 @@ document.addEventListener('DOMContentLoaded', async () => {
     await runQuery();
   });
 
-  // Fallback Ctrl+Enter
   document.addEventListener('keydown', (event) => {
     if (event.ctrlKey && event.key === 'Enter') {
       runQuery();
     }
   });
 
-  await runQuery();
-});
-
-////////////////////////  R module  ///////////////////////
-document.addEventListener('DOMContentLoaded', async () => {
-  const RRepl = await import('./components/RRepl.js');
-  // error message for R
-  app.rError = new ErrorMessage('#r-status', 'rError');
-  // Prepare R evaluation area
-  app.rEditor = new CodeEditor("#r-editor", {
-    mode: 'text/x-rsrc',
-    stateKey: 'rCode',
-    // handled in global ctrlenter listener
-    // extraKeys: { 'Ctrl-Enter': () => evalR() },
-    overrides: { lineNumbers: false }
+  $('#share-btn').click(() => {
+    copyToClipboard(window.location.href, 'Link copied to clipboard!');
   });
 
-  // Initialize R environment
+  $('#reset-btn').click(() => {
+    const newUrl = window.location.origin + window.location.pathname;
+    window.location = newUrl;
+  });
+
+  app.resizeHandle = new ResizeHandle('#app', '#grid-resize', '#toggle-viz-btn');
+
+  await loadDatabase(state.getState().dbId, { resetSqlQuery: !state.hasUrlState() });
+
+  app.rError = new ErrorMessage('#r-status', 'rError');
+  app.rEditor = new CodeEditor('#r-editor', {
+    mode: 'text/x-rsrc',
+    stateKey: 'rCode',
+    overrides: { lineNumbers: false },
+  });
+
+  const RRepl = await import('./components/RRepl.js');
   const outputElem = 'r-output';
   app.repl = await RRepl.default.initialize(outputElem);
+
   async function evalR(viewOnly = false) {
     state.setState({ rError: 'loading' });
     const { rCode, result } = state.getState();
     const res = await app.repl.eval(rCode, result, viewOnly);
     if (res.error) {
       state.setState({ rError: res.error });
-    } else {
-      state.setState({ rError: '', rOutput: res.svg });
-      document.getElementById(outputElem).innerHTML = res.svg;
+      return;
     }
-  }
-  // 'Execute R' button
-  // document.getElementById('execute-r').addEventListener('click', async (e) => {await evalR();});
 
-  // evaluate R when sql state changes
+    state.setState({ rError: '', rOutput: res.svg });
+    document.getElementById(outputElem).innerHTML = res.svg;
+  }
+
   state.subscribe((newState, updates) => {
-    if (newState.sqlError) { return; }
+    if (newState.sqlError) {
+      return;
+    }
     if ('layout' in updates) {
       app.rEditor.refresh();
     }
     if (!('runningQuery' in updates)) {
-      evalR(!('result' in updates) /* viewOnly */);
+      evalR(!('result' in updates));
     }
   }, ['result', 'viewsize', 'layout']);
 
-  // Initial query to populate table based on URL/state
-  await evalR();
-});
-
-////////////////////////  Window Resizing, Global Buttons, etc.   ///////////////////////
-document.addEventListener('DOMContentLoaded', () => {
   state.subscribe((newState, updates) => {
-    // don't save when there are errors is empty
-    if (newState.sqlError || newState.rError) { return; }
+    if (newState.sqlError || newState.rError) {
+      return;
+    }
     if ('result' in updates || 'rOutput' in updates) {
       state.saveState();
     }
     if ('rOutput' in updates) {
-      // button for downloading svg
       const dl = $('#svg-dl-btn');
       const blob = new Blob([newState.rOutput], { type: 'image/svg+xml' });
       const newUrl = URL.createObjectURL(blob);
       const oldUrl = dl.attr('href');
-      if (!!oldUrl) { URL.revokeObjectURL(oldUrl); }
+      if (!!oldUrl) {
+        URL.revokeObjectURL(oldUrl);
+      }
       dl.attr('download', 'cloudspecs-plot.svg').attr('href', newUrl);
     }
   }, ['result', 'rOutput']);
 
-  // button for sharing url
-  $('#share-btn').click(() => {
-    // state.saveState();
-    copyToClipboard(window.location.href, "Link copied to clipboard!");
+  await evalR();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  boot().catch((error) => {
+    console.error('Failed to initialize CloudSpecs', error);
+    showToast('Failed to initialize the application', 'error');
   });
-
-
-  // button for resetting page
-  $('#reset-btn').click((e) => {
-    const newUrl = window.location.origin + window.location.pathname;
-    window.location = newUrl;
-  });
-
-  // parse sample queries
-  const samplesTable = {};
-  SAMPLE_QUERIES.forEach(item => {
-    let sqlProcessed = item.sql_code;
-    let rProcessed = item.r_code;
-
-    if (Array.isArray(sqlProcessed)) {
-      sqlProcessed = sqlProcessed.join('\n');
-    }
-    if (Array.isArray(rProcessed)) {
-      rProcessed = rProcessed.join('\n');
-    }
-
-    samplesTable[item.description] = {
-      sql_code: sqlProcessed,
-      r_code: rProcessed,
-      layout: item.layout || (!!rProcessed ? 'split' : 'table')
-    };
-  });
-
-  const $dropdown = $('#sample-queries');
-  for (const description in samplesTable) {
-    if (description) {
-      $dropdown.append(
-        $('<option></option>')
-          .attr('value', description)
-          .text(description)
-      );
-    }
-  }
-
-  $dropdown.on('change', () => {
-    const selectedDescription = $('#sample-queries :selected').val();
-    const data = samplesTable[selectedDescription];
-    if (!data) { return; }
-    const updates = { sqlQuery: data.sql_code, rCode: data.r_code, layout: { type: data.layout }, runningQuery: true };
-    if (!data.r_code && 'repl' in app) {
-      updates.rCode = app.repl.minimalRCode();
-      updates.layout = updates.layout || { type: 'table' };
-    }
-    console.log(data);
-    state.setState(updates);
-    toggleFavicon(false); // Using sample queries is not cracked
-    runQuery();
-  });
-
-  // grid resize drag handler
-  app.resizeHandle = new ResizeHandle('#app', '#grid-resize', '#toggle-viz-btn');
 });

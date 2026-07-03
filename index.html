@@ -21,10 +21,11 @@
         <select class="dropdown" id="sample-queries">
           <option value="" disabled selected>Select Example</option>
         </select>
-        <label class="cs-button" for="csv-upload">Import CSV</label>
+        <label class="cs-button" for="csv-upload">Import CSV as Table</label>
         <input id="csv-upload" type="file" accept=".csv,text/csv">
       </header>
       <header id="header-rhs" class="header-segment">
+        <select class="dropdown db-select" id="database-select" aria-label="Select database"></select>
         <button class="cs-button" id="toggle-viz-btn">&#9664; Visualize (R+ggplot)</button>
         <div id="global-header-buttons">
           <button class="cs-button" id="reset-btn">Reset</button>

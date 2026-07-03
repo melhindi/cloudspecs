@@ -3,7 +3,8 @@
 
 // Helper functions for Base64 encoding/decoding of URI components
 import LZString from 'lz-string';
-import { setGlobalError } from '/util.js'
+import { setGlobalError } from '../util.js'
+import { DEFAULT_DATABASE_ID, getDatabaseConfig } from './databaseCatalog.js';
 const encodeForURI = (str) => LZString.compressToEncodedURIComponent(str);
 const decodeFromURI = (str) => {
   try {
@@ -20,14 +21,13 @@ const getQueryParam = (name) => {
 }
 
 const STATE_PARAM = 'state';
-const URL_ENCODED_KEYS = ['sqlQuery', 'rCode', 'layout'];
+const URL_ENCODED_KEYS = ['dbId', 'sqlQuery', 'rCode', 'layout'];
+const REQUIRED_URL_KEYS = ['sqlQuery', 'rCode', 'layout'];
 // Default state values
 const defaultState = {
+  dbId: DEFAULT_DATABASE_ID,
   // default SQL query to run
-  sqlQuery: //
-`SELECT *
-FROM aws
-`,
+  sqlQuery: getDatabaseConfig(DEFAULT_DATABASE_ID)?.defaultSqlQuery ?? '',
   // initial R code to run
   rCode: //
     `to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)
@@ -53,8 +53,10 @@ let state = (() => {
       const decoded = decodeFromURI(encoded);
       const parsed = JSON.parse(decoded);
       // console.log('decoded state ', parsed);
-      if (Object.keys(parsed).length == URL_ENCODED_KEYS.length
-          && URL_ENCODED_KEYS.every(key => parsed.hasOwnProperty(key))) {
+      if (
+        Object.keys(parsed).every(key => URL_ENCODED_KEYS.includes(key))
+        && REQUIRED_URL_KEYS.every(key => parsed.hasOwnProperty(key))
+      ) {
         return { ...defaultState, ...parsed };
       }
     } catch (e) {
@@ -63,6 +65,7 @@ let state = (() => {
   }
   return { ...defaultState };
 })();
+const hasEncodedState = !!getQueryParam(STATE_PARAM);
 let subscribers = [];
 let subscriptionPaths = new Map();
 
@@ -108,4 +111,4 @@ const saveState = () => {
   // window.history.pushState(null, '', newUrl);
 }
 
-export default { subscribe, getState, setState, saveState };
+export default { subscribe, getState, setState, saveState, hasUrlState: () => hasEncodedState };

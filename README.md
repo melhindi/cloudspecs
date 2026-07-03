@@ -50,10 +50,14 @@ You can access your local deployment at [`http://localhost:5173/`](http://localh
 ## Custom Reproducibility Sites
 You can use the Cloudspecs framework to create custom reproducibility sites for your own papers by forking this repository and replacing Cloudspecs with your own database.
 You'll probably want to replace/adapt the following files:
-- static/cloudspecs.duckdb
-- static/sample-queries.json
+- static/*.duckdb
+- static/<dbId>.json
 - components/db.js
 - vite.config.js
+
+The app discovers databases automatically from `static/*.duckdb`.
+The `dbId` is the DuckDB filename stem, so `static/io_benchmarks.duckdb` maps to `dbId = io_benchmarks` and `static/io_benchmarks.json`.
+If a database has a matching `static/<dbId>.json` sidecar, its sample queries appear in the UI without any code changes.
 
 Cloudspecs does not require a web server and can be hosted e.g., on GitHub Pages.
 We also provide a LaTex package (in the `latex` folder) that showcases creating clickable figures that reference your reproducibility site from within your paper.

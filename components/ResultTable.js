@@ -10,7 +10,7 @@ import 'datatables.net-buttons/js/buttons.html5.js';
 import 'datatables.net-buttons/js/buttons.print.js';
 import 'datatables.net-responsive-dt';
 
-import { copyToClipboard } from '/util.js'
+import { copyToClipboard } from '../util.js'
 
 // Import export libraries for buttons functionality
 import JSZip from 'jszip';
