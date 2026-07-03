@@ -113,6 +113,29 @@ main {
   padding: .5em;
 }
 
+.status-msg,
+.meta-msg {
+  min-height: 1.5em;
+  padding: .2em .5em;
+}
+
+.status-msg {
+  color: #495057;
+}
+
+.status-msg.is-error {
+  color: red;
+}
+
+.status-msg.is-success {
+  color: #2b6e3f;
+}
+
+.meta-msg {
+  color: #5c6773;
+  font-size: .9em;
+}
+
 .toast {
   visibility: hidden;
   min-width: 250px;
@@ -187,6 +210,10 @@ header {
     text-decoration: none;
     outline: none;
     text-overflow: ellipsis;
+}
+
+#csv-upload {
+  display: none;
 }
 
 .cs-button:hover:not(.disabled){

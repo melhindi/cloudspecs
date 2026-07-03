@@ -13,10 +13,11 @@ import SAMPLE_QUERIES from './static/sample-queries.json';
 import { copyToClipboard } from '/util.js'
 
 const app = {};
+const quoteIdentifier = (name) => `"${String(name).replaceAll('"', '""')}"`;
 ////////////////////////  SQL Editor  ///////////////////////
 // Run query based on current state.sqlQuery
 async function runQuery() {
-  state.setState({ sqlError: 'loading' });
+  state.setState({ sqlError: 'loading', sqlWarning: '' });
   const query = state.getState().sqlQuery;
   let result;
   try {
@@ -25,11 +26,28 @@ async function runQuery() {
     result = { error: err.toString() };
   }
   if (result.error) {
-    state.setState({ result: { columns: [], rows: [], query }, sqlError: result.error });
+    state.setState({ result: { columns: [], rows: [], query }, sqlError: result.error, sqlWarning: '' });
   } else {
-    let newState = { result: { columns: result.columns, rows: result.rows, query }, sqlError: '' };
+    let newState = { result: { columns: result.columns, rows: result.rows, query }, sqlError: '', sqlWarning: '' };
     state.setState('warning' in result ? { ...newState, sqlWarning: result.warning } : newState);
   }
+}
+
+function renderCsvStatus(newState) {
+  const elem = document.getElementById('csv-status');
+  const { csvStatusText, csvStatusType } = newState;
+  elem.textContent = csvStatusType === 'loading' ? 'Importing CSV...' : csvStatusText;
+  elem.classList.toggle('is-error', csvStatusType === 'error');
+  elem.classList.toggle('is-success', csvStatusType === 'success');
+}
+
+function renderImportedTables(newState) {
+  const elem = document.getElementById('imported-tables');
+  if (!newState.importedTables.length) {
+    elem.textContent = '';
+    return;
+  }
+  elem.textContent = `Session tables: ${newState.importedTables.join(', ')}`;
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -46,6 +64,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialize database and result table
   app.db = await DB.create();
   app.resultTable = new ResultTable('#sql-output');
+  state.subscribe((newState) => renderCsvStatus(newState), ['csvStatusText', 'csvStatusType']);
+  state.subscribe((newState) => renderImportedTables(newState), ['importedTables']);
+  renderCsvStatus(state.getState());
+  renderImportedTables(state.getState());
 
   // Handle state updates for query results
   state.subscribe((newState, updates) => {
@@ -56,6 +78,33 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load table button
   document.getElementById('load-table').addEventListener('click', async (e) => {
     e.preventDefault();
+    await runQuery();
+  });
+
+  document.getElementById('csv-upload').addEventListener('change', async (event) => {
+    const [file] = event.target.files || [];
+    event.target.value = '';
+    if (!file) {
+      return;
+    }
+
+    state.setState({ csvStatusType: 'loading', csvStatusText: '', sqlError: '', sqlWarning: '' });
+    const imported = await app.db.importCSV(file);
+    if (imported.error) {
+      state.setState({
+        csvStatusType: 'error',
+        csvStatusText: imported.error.join(' '),
+      });
+      return;
+    }
+
+    const nextTables = [...state.getState().importedTables, imported.tableName];
+    state.setState({
+      csvStatusType: 'success',
+      csvStatusText: `Imported ${file.name} as ${imported.tableName}.`,
+      importedTables: nextTables,
+      sqlQuery: `SELECT *\nFROM ${quoteIdentifier(imported.tableName)}\nLIMIT 100`,
+    });
     await runQuery();
   });
 

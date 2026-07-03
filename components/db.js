@@ -3,6 +3,25 @@ import * as duckdb from '@duckdb/duckdb-wasm';
 // Load static DuckDB database from GitHub
 import dbfile from '/static/cloudspecs.duckdb?url';
 const DB_NAME = "cloudspecs.duckdb";
+const CSV_UPLOAD_PREFIX = "uploads/";
+
+const escapeIdentifier = (name) => `"${String(name).replaceAll('"', '""')}"`;
+const escapeLiteral = (value) => String(value).replaceAll("'", "''");
+const sanitizeTableName = (filename) => {
+  const stem = filename.replace(/\.csv$/i, '').trim().toLowerCase();
+  const normalized = stem
+    .replace(/[^a-z0-9_]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .replace(/_+/g, '_');
+
+  if (!normalized) {
+    return 'data';
+  }
+  if (/^[0-9]/.test(normalized)) {
+    return `data_${normalized}`;
+  }
+  return normalized;
+};
 
 export default class DB {
   #db; #conn;
@@ -57,6 +76,41 @@ export default class DB {
       return { columns, rows, ...add };
     } catch (error) {
       return { error: error.toString()?.split("\n") }
+    }
+  }
+
+  async importCSV(file) {
+    const sourceName = file?.name || 'data.csv';
+    const registeredName = `${CSV_UPLOAD_PREFIX}${Date.now()}-${sourceName.replace(/[^A-Za-z0-9._-]+/g, '_')}`;
+    try {
+      const buffer = new Uint8Array(await file.arrayBuffer());
+      await this.#db.registerFileBuffer(registeredName, buffer);
+
+      const baseName = sanitizeTableName(sourceName);
+      let tableName = baseName;
+      let suffix = 2;
+      while (await this.#tableExists(tableName)) {
+        tableName = `${baseName}_${suffix}`;
+        suffix += 1;
+      }
+
+      await this.#conn.send(`
+        CREATE TEMP TABLE ${escapeIdentifier(tableName)} AS
+        SELECT *
+        FROM read_csv_auto('${escapeLiteral(registeredName)}')
+      `);
+      return { tableName };
+    } catch (error) {
+      return { error: error.toString()?.split("\n") };
+    }
+  }
+
+  async #tableExists(tableName) {
+    try {
+      await this.#conn.query(`SELECT 1 FROM ${escapeIdentifier(tableName)} LIMIT 1`);
+      return true;
+    } catch (_error) {
+      return false;
     }
   }
 };

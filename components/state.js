@@ -38,7 +38,11 @@ output <- ggplot(df, aes()) +
 
 plot(output); dev.off(); to_svg() # output to the html page`,
   sqlError: 'loading',
+  sqlWarning: '',
   rError: 'loading',
+  csvStatusText: '',
+  csvStatusType: 'idle',
+  importedTables: [],
   layout: { type: 'table' }
 };
 
