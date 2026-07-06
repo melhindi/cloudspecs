@@ -12,7 +12,7 @@
   {
     "description": "Median Latency by Durability Mode",
     "sql_code": [
-        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns + sync_lat_p50_ns)/1000 as median_latency_us, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
         "FROM storage_benchmarks",
         "WHERE provider = 'stackit'",
         "AND benchmark_rw_mode = 'write'",
@@ -24,7 +24,7 @@
         "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
         "",
         "### the current table is bound to the variable 'df'",
-        "output <- ggplot(df, aes(y = median_latency_ms, x = durability_mode)) +",
+        "output <- ggplot(df, aes(y = median_latency_us, x = durability_mode)) +",
         "  geom_boxplot() +",
         "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
         "  facet_wrap(~ benchmark_machine_type) + ",
@@ -37,7 +37,7 @@
   {
     "description": "Median Latency by Durability Mode",
     "sql_code": [
-        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns + sync_lat_p50_ns)/1000 as median_latency_us, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
         "FROM storage_benchmarks",
         "WHERE provider = 'stackit'",
         "AND benchmark_rw_mode = 'write'",
@@ -49,7 +49,7 @@
         "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
         "",
         "### the current table is bound to the variable 'df'",
-        "output <- ggplot(df, aes(y = median_latency_ms, x = durability_mode)) +",
+        "output <- ggplot(df, aes(y = median_latency_us, x = durability_mode)) +",
         "  geom_boxplot() +",
         "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
         "  facet_grid(benchmark_machine_type ~ block_volume_performance_class) +",
@@ -62,7 +62,7 @@
   {
     "description": "Median Latency by Filesystem",
     "sql_code": [
-        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns + sync_lat_p50_ns)/1000 as median_latency_us, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
         "FROM storage_benchmarks",
         "WHERE provider = 'stackit'",
         "AND benchmark_rw_mode = 'write'",
@@ -74,7 +74,7 @@
         "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
         "",
         "### the current table is bound to the variable 'df'",
-        "output <- ggplot(df, aes(y = median_latency_ms, x = storage_target_filesystem )) +",
+        "output <- ggplot(df, aes(y = median_latency_us, x = storage_target_filesystem )) +",
         "  geom_boxplot() +",
         "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
         "  facet_wrap(~ benchmark_machine_type) + ",
@@ -87,7 +87,7 @@
   {
     "description": "Median Latency by Filesystem",
     "sql_code": [
-        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns + sync_lat_p50_ns)/1000 as median_latency_us, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
         "FROM storage_benchmarks",
         "WHERE provider = 'stackit'",
         "AND benchmark_rw_mode = 'write'",
@@ -99,7 +99,7 @@
         "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
         "",
         "### the current table is bound to the variable 'df'",
-        "output <- ggplot(df, aes(y = median_latency_ms, x = storage_target_filesystem )) +",
+        "output <- ggplot(df, aes(y = median_latency_us, x = storage_target_filesystem )) +",
         "  geom_boxplot() +",
         "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
         "  facet_grid(benchmark_machine_type ~ block_volume_performance_class) +",
@@ -112,7 +112,7 @@
   {
     "description": "Median Latency by Operation Type",
     "sql_code": [
-        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns + sync_lat_p50_ns)/1000 as median_latency_us, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
         "FROM storage_benchmarks",
         "WHERE provider = 'stackit'",
         "AND io_engine = 'psync' AND block_size_bytes = 4096 AND iodepth = 1 AND numjobs = 1",
@@ -123,7 +123,7 @@
         "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
         "",
         "### the current table is bound to the variable 'df'",
-        "output <- ggplot(df, aes(y = median_latency_ms, x = benchmark_rw_mode )) +",
+        "output <- ggplot(df, aes(y = median_latency_us, x = benchmark_rw_mode )) +",
         "  geom_boxplot() +",
         "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
         "  facet_wrap(~ benchmark_machine_type) + ",
@@ -136,7 +136,7 @@
   {
     "description": "Median Latency by Operation Type",
     "sql_code": [
-        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns + sync_lat_p50_ns)/1000 as median_latency_us, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
         "FROM storage_benchmarks",
         "WHERE provider = 'stackit'",
         "AND io_engine = 'psync' AND block_size_bytes = 4096 AND iodepth = 1 AND numjobs = 1",
@@ -147,7 +147,55 @@
         "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
         "",
         "### the current table is bound to the variable 'df'",
-        "output <- ggplot(df, aes(y = median_latency_ms, x = benchmark_rw_mode )) +",
+        "output <- ggplot(df, aes(y = median_latency_us, x = benchmark_rw_mode )) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_grid(benchmark_machine_type ~ block_volume_performance_class) +",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Remote Block Storage"
+  },
+  {
+    "description": "Tail Latency by Operation Type",
+    "sql_code": [
+        "SELECT (read_clat_p99_ns + write_clat_p99_ns + sync_lat_p99_ns)/1000 as tail_latency_us, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND io_engine = 'psync' AND block_size_bytes = 4096 AND iodepth = 1 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'local' AND durability_mode = 'none' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = tail_latency_us, x = benchmark_rw_mode )) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_wrap(~ benchmark_machine_type) + ",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Instance-Local Storage"
+  },
+  {
+    "description": "Tail Latency by Operation Type",
+    "sql_code": [
+        "SELECT (read_clat_p99_ns + write_clat_p99_ns + sync_lat_p99_ns)/1000 as tail_latency_us, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "FROM storage_benchmarks",
+        "WHERE provider = 'stackit'",
+        "AND io_engine = 'psync' AND block_size_bytes = 4096 AND iodepth = 1 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '1G'",
+        "AND storage_target = 'block' AND durability_mode = 'none' AND storage_target_filesystem = 'raw'"
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = tail_latency_us, x = benchmark_rw_mode )) +",
         "  geom_boxplot() +",
         "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
         "  facet_grid(benchmark_machine_type ~ block_volume_performance_class) +",
@@ -460,7 +508,7 @@
   {
     "description": "Median Instance Storage Latency by Provider",
     "sql_code": [
-        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_us, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
         "FROM storage_benchmarks",
         "WHERE provider <> ''",
         "AND io_engine = 'psync' AND block_size_bytes = 4096 AND iodepth = 1 AND numjobs = 1",
@@ -471,7 +519,7 @@
         "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
         "",
         "### the current table is bound to the variable 'df'",
-        "output <- ggplot(df, aes(y = median_latency_ms, x = benchmark_rw_mode , fill=provider)) +",
+        "output <- ggplot(df, aes(y = median_latency_us, x = benchmark_rw_mode , fill=provider)) +",
         "  geom_boxplot() +",
         "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
         "  facet_wrap(~ benchmark_machine_type) + ",
@@ -484,7 +532,7 @@
   {
     "description": "Median Remote Block Storage Latency by Provider",
     "sql_code": [
-        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_us, * EXCLUDE (run_id, scenario_name, os_tuning,benchmark_tool, fio_command, fio_version, fio_error, valid_measurement, failure_reason, usr_cpu, sys_cpu, ctx, majf, minf, )",
         "FROM storage_benchmarks",
         "WHERE provider <> ''",
         "AND benchmark_machine_type IN ('g2a.30d', 'c6id.32xlarge')",
@@ -496,7 +544,7 @@
         "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
         "",
         "### the current table is bound to the variable 'df'",
-        "output <- ggplot(df, aes(y = median_latency_ms, x = benchmark_rw_mode , fill=provider)) +",
+        "output <- ggplot(df, aes(y = median_latency_us, x = benchmark_rw_mode , fill=provider)) +",
         "  geom_boxplot() +",
         "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
         "  facet_wrap(~ block_volume_performance_class) + ",

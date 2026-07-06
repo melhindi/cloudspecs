@@ -12,7 +12,7 @@
   {
     "description": "Median Latency by Operation Type",
     "sql_code": [
-        "SELECT (read_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_ms, * EXCLUDE (run_id, scenario_name, benchmark_tool, fio_command, fio_job, fio_error, usr_cpu, sys_cpu, ctx, majf, minf)",
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_us, * EXCLUDE (run_id, scenario_name, benchmark_tool, fio_command, fio_job, fio_error, usr_cpu, sys_cpu, ctx, majf, minf)",
         "FROM block_storage",
         "WHERE",
         "io_engine = 'io_uring' AND iodepth = 32 AND numjobs = 1",
