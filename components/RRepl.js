@@ -79,7 +79,6 @@ plot(output); dev.off(); to_svg()`
 
   async onDataUpdate(table) {
     await this.#webR.objs.globalEnv.bind('df', table.rows);
-    console.log('bound new table to R:' );
     await this.#webR.evalR('print(head(df))');
   }
 
@@ -90,10 +89,8 @@ plot(output); dev.off(); to_svg()`
       let h = window.innerHeight/2;
       await this.#webR.objs.globalEnv.bind('output.width.inch', w/96);
       await this.#webR.objs.globalEnv.bind('output.height.inch', h/96);
-      // console.log('bound output size to R:', w, h);
     } catch (e) {
-      log("Error updating screen size: " + e);
-      console.log("failed to re-bind or re-draw data", e);
+      console.error('Failed to update R output dimensions', e);
     }
   }
 }

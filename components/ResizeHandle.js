@@ -29,7 +29,6 @@ export default class ResizeHandle {
     window.addEventListener('resize', resizeHandler);
 
     state.subscribe((newState, updates) => {
-      console.log("ResizeHandle state update: ", newState, updates);
       if (!('layout' in updates)) return;
       const { type, percentage } = newState.layout;
       this.render(type, percentage);
@@ -40,7 +39,6 @@ export default class ResizeHandle {
   }
 
   render(type, percentage) {
-    console.log('re-rendering split');
     percentage = percentage || 50;
     const grid = $(this.#grid);
       if (type == 'split') {
