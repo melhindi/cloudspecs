@@ -179,7 +179,7 @@
         "    SELECT *",
         "    FROM (",
         "        VALUES",
-        "            ('ceph-rbd',        9.2208 / 3600.0), -- costs of three nodes (3 storage + 1 controller)",
+        "            ('ceph-rbd',        9.2208 / 3600.0), -- costs of four nodes (3 storage + 1 controller)",
         "            ('hardware-limit',  9.2208 / 3600.0), -- same as ceph-rbd costs",
         "            ('gp3',             28.00 / (730.0 * 3600.0)),",
         "            ('io2',             4695.10 / (730.0 * 3600.0))",
