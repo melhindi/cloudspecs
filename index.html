@@ -17,15 +17,23 @@
     <!-- <div id="header-container"> -->
       <header id="header-lhs" class="header-segment">
         <object id="logo" data="./static/logo/cloudspecs-logo.svg" type="image/svg+xml" alt="Cloudspecs" title="Cloudspecs"></object>
-        <!-- <img id="logo" src="static/cloudspec-logo.svg" alt="Cloudspecs" /> -->
-        <select class="dropdown" id="sample-queries">
-          <option value="" disabled selected>Select Example</option>
-        </select>
-        <label class="cs-button" for="csv-upload">Import CSV as Table</label>
+        <div class="header-control">
+          <label class="header-control-label" for="database-select">Database</label>
+          <select class="dropdown db-select" id="database-select" aria-label="Select database"></select>
+        </div>
+        <div class="header-control">
+          <label class="header-control-label" for="sample-queries">Example</label>
+          <select class="dropdown example-select" id="sample-queries">
+            <option value="" disabled selected>Select Example</option>
+          </select>
+        </div>
+        <div class="header-control">
+          <label class="header-control-label" for="csv-upload">Add table to DB</label>
+          <label class="cs-button" for="csv-upload">Import CSV</label>
+        </div>
         <input id="csv-upload" type="file" accept=".csv,text/csv">
       </header>
       <header id="header-rhs" class="header-segment">
-        <select class="dropdown db-select" id="database-select" aria-label="Select database"></select>
         <button class="cs-button" id="toggle-viz-btn">&#9664; Visualize (R+ggplot)</button>
         <div id="global-header-buttons">
           <button class="cs-button" id="reset-btn">Reset</button>

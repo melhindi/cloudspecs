@@ -187,6 +187,22 @@ header {
   margin-right: .7em;
 }
 
+.header-control {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .2em;
+  min-width: 0;
+  margin-bottom: .333em;
+}
+
+.header-control-label {
+  font-size: .72em;
+  font-weight: 600;
+  color: #4b5563;
+  margin-left: .334em;
+}
+
 .dropdown, .cs-button {
     position: relative;
     display: inline-block;
@@ -218,6 +234,10 @@ header {
   min-width: 11rem;
 }
 
+.example-select {
+  min-width: 12rem;
+}
+
 #csv-upload {
   display: none;
 }
@@ -231,4 +251,18 @@ header {
 
 .cs-button:hover {
     text-decoration: none;
+}
+
+#header-lhs {
+  gap: .5em;
+}
+
+#header-rhs {
+  justify-content: flex-end;
+}
+
+#global-header-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
 }
