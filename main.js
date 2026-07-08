@@ -30,6 +30,24 @@ const app = {
 };
 
 const quoteIdentifier = (name) => `"${String(name).replaceAll('"', '""')}"`;
+const minimalRCode = () => `to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)
+theme_set(theme_bw())
+
+### the current table is bound to the variable 'df'
+output <- ggplot(df, aes()) +
+  annotate(geom = 'text', x = 0, y = 0, label = 'Plot something!')
+
+## output to the html page
+plot(output); dev.off(); to_svg()`;
+
+function getSampleState(sample) {
+  const layoutType = sample?.layout || (sample?.r_code ? 'split' : 'table');
+  return {
+    sqlQuery: sample?.sql_code ?? '',
+    rCode: sample?.r_code || minimalRCode(),
+    layout: { type: sample?.r_code ? layoutType : 'table' },
+  };
+}
 
 async function runQuery() {
   if (!app.db) {
@@ -146,18 +164,10 @@ function syncSampleQuerySelection(selectedSql = '') {
 }
 
 function handleSampleQuerySelection(sample) {
-  const layoutType = sample.layout || (sample.r_code ? 'split' : 'table');
   const updates = {
-    sqlQuery: sample.sql_code,
-    rCode: sample.r_code,
-    layout: { type: layoutType },
+    ...getSampleState(sample),
     runningQuery: true,
   };
-
-  if (!sample.r_code && app.repl) {
-    updates.rCode = app.repl.minimalRCode();
-    updates.layout = { type: 'table' };
-  }
 
   state.setState(updates);
   toggleFavicon(false);
@@ -211,9 +221,26 @@ async function loadDatabase(dbId, { resetSqlQuery = false } = {}) {
   app.db = nextDb;
 
   let initialSqlQuery = state.getState().sqlQuery;
+  let initialRCode = state.getState().rCode;
+  let initialLayout = state.getState().layout;
   if (shouldResetSqlQuery) {
-    initialSqlQuery = dbConfig.defaultSqlQuery || await nextDb.getPreviewQuery();
-    state.setState({ sqlQuery: initialSqlQuery });
+    const defaultSample = dbConfig.sampleQueries[0];
+    if (defaultSample) {
+      const sampleState = getSampleState(defaultSample);
+      initialSqlQuery = sampleState.sqlQuery;
+      initialRCode = sampleState.rCode;
+      initialLayout = sampleState.layout;
+      state.setState(sampleState);
+    } else {
+      initialSqlQuery = await nextDb.getPreviewQuery();
+      initialRCode = minimalRCode();
+      initialLayout = { type: 'table' };
+      state.setState({
+        sqlQuery: initialSqlQuery,
+        rCode: initialRCode,
+        layout: initialLayout,
+      });
+    }
   }
 
   state.setState({
@@ -224,6 +251,8 @@ async function loadDatabase(dbId, { resetSqlQuery = false } = {}) {
     csvStatusText: '',
     csvStatusType: 'idle',
     importedTables: [],
+    rCode: initialRCode,
+    layout: initialLayout,
     result: { columns: [], rows: [], query: initialSqlQuery },
   });
 
