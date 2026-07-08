@@ -12,15 +12,15 @@
   {
     "description": "Median Latency by Operation Type",
     "sql_code": [
-        "SELECT (read_clat_p50_ns + write_clat_p50_ns + write_clat_p50_ns)/1000 as median_latency_us, * EXCLUDE (run_id, scenario_name, benchmark_tool, fio_command, fio_job, fio_error, usr_cpu, sys_cpu, ctx, majf, minf)",
+        "SELECT (read_clat_p50_ns + write_clat_p50_ns + sync_lat_p50_ns)/1000 as median_latency_us, * EXCLUDE (run_id, scenario_name, benchmark_tool, fio_command, fio_job, fio_error, usr_cpu, sys_cpu, ctx, majf, minf)",
         "FROM block_storage",
         "WHERE",
-        "io_engine = 'io_uring' AND iodepth = 32 AND numjobs = 1",
-        "AND direct = 1 AND fio_size = '10G' AND durability_mode = 'none'",
+        "io_engine = 'io_uring' AND iodepth = 1 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '10G'",
         "AND block_size_bytes = 4096",
         "AND storage_target_filesystem = 'raw'",
         "AND target_sharing = 'shared'",
-        "AND benchmark_machine_type = 'm6i.2xlarge'"
+        ""
     ],
     "r_code": [
         "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
@@ -29,7 +29,34 @@
         "output <- ggplot(df, aes(y = median_latency_us, x = backend )) +",
         "  geom_boxplot() +",
         "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
-        "  facet_wrap(~ benchmark_name) +",
+        "  facet_grid(durability_mode ~ benchmark_rw_mode) +",
+        "  theme_bw()",
+        "",
+        "plot(output); dev.off(); to_svg() # output to the html page"
+    ],
+    "group": "Latency"
+  },
+  {
+    "description": "Tail Latency by Operation Type",
+    "sql_code": [
+        "SELECT (read_clat_p99_ns + write_clat_p99_ns + sync_lat_p99_ns)/1000 as tail_latency_us, * EXCLUDE (run_id, scenario_name, benchmark_tool, fio_command, fio_job, fio_error, usr_cpu, sys_cpu, ctx, majf, minf)",
+        "FROM block_storage",
+        "WHERE",
+        "io_engine = 'io_uring' AND iodepth = 1 AND numjobs = 1",
+        "AND direct = 1 AND fio_size = '10G'",
+        "AND block_size_bytes = 4096",
+        "AND storage_target_filesystem = 'raw'",
+        "AND target_sharing = 'shared'",
+        ""
+    ],
+    "r_code": [
+        "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
+        "",
+        "### the current table is bound to the variable 'df'",
+        "output <- ggplot(df, aes(y = tail_latency_us, x = backend )) +",
+        "  geom_boxplot() +",
+        "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
+        "  facet_grid(durability_mode ~ benchmark_rw_mode) +",
         "  theme_bw()",
         "",
         "plot(output); dev.off(); to_svg() # output to the html page"
@@ -42,12 +69,12 @@
         "SELECT (read_bw_kib_per_sec + write_bw_kib_per_sec)/1000 as bw_mib_per_sec, * EXCLUDE (run_id, scenario_name, benchmark_tool, fio_command, fio_job, fio_error, usr_cpu, sys_cpu, ctx, majf, minf)",
         "FROM block_storage",
         "WHERE",
-        "io_engine = 'io_uring' AND iodepth = 32 AND numjobs = 1",
+        "io_engine = 'io_uring' AND iodepth = 32 AND numjobs = 8",
         "AND direct = 1 AND fio_size = '10G' AND durability_mode = 'none'",
         "AND block_size_bytes = 1048576",
         "AND storage_target_filesystem = 'raw'",
         "AND target_sharing = 'shared'",
-        "AND benchmark_machine_type = 'm6i.2xlarge'"
+        ""
     ],
     "r_code": [
         "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
@@ -56,7 +83,7 @@
         "output <- ggplot(df, aes(y = bw_mib_per_sec, x = backend )) +",
         "  geom_boxplot() +",
         "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
-        "  facet_wrap(~ benchmark_name) +",
+        "  facet_wrap(~ benchmark_rw_mode) +",
         "  theme_bw()",
         "",
         "plot(output); dev.off(); to_svg() # output to the html page"
@@ -74,7 +101,7 @@
         "AND block_size_bytes = 1048576",
         "AND storage_target_filesystem = 'raw'",
         "AND target_sharing = 'shared'",
-        "AND benchmark_machine_type = 'm6i.2xlarge'"
+        ""
     ],
     "r_code": [
         "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
@@ -97,12 +124,12 @@
         "SELECT (read_iops + write_iops) as iops, * EXCLUDE (run_id, scenario_name, benchmark_tool, fio_command, fio_job, fio_error, usr_cpu, sys_cpu, ctx, majf, minf)",
         "FROM block_storage",
         "WHERE",
-        "io_engine = 'io_uring' AND iodepth = 32 AND numjobs = 1",
+        "io_engine = 'io_uring' AND iodepth = 32 AND numjobs = 8",
         "AND direct = 1 AND fio_size = '10G' AND durability_mode = 'none'",
-        "AND block_size_bytes = 1048576",
+        "AND block_size_bytes = 4096",
         "AND storage_target_filesystem = 'raw'",
         "AND target_sharing = 'shared'",
-        "AND benchmark_machine_type = 'm6i.2xlarge'"
+        ""
     ],
     "r_code": [
         "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
@@ -111,7 +138,7 @@
         "output <- ggplot(df, aes(y = iops, x = backend )) +",
         "  geom_boxplot() +",
         "  stat_summary(fun='median', geom='text', aes(label=round(after_stat(y), digits =2)), vjust=-0.5) +",
-        "  facet_wrap(~ benchmark_name) +",
+        "  facet_wrap(~ benchmark_rw_mode) +",
         "  theme_bw()",
         "",
         "plot(output); dev.off(); to_svg() # output to the html page"
@@ -126,10 +153,10 @@
         "WHERE",
         "io_engine = 'io_uring' AND iodepth = 32",
         "AND direct = 1 AND fio_size = '10G' AND durability_mode = 'none'",
-        "AND block_size_bytes = 1048576",
+        "AND block_size_bytes = 4096",
         "AND storage_target_filesystem = 'raw'",
         "AND target_sharing = 'shared'",
-        "AND benchmark_machine_type = 'm6i.2xlarge'"
+        ""
     ],
     "r_code": [
         "to_svg <- svgstring(width = output.width.inch, height = output.height.inch, scaling = 1)",
